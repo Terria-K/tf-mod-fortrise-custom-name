@@ -22,7 +22,7 @@ namespace TFModFortRiseCustomName
         //Debugger.Launch(); // Proposera d’attacher Visual Studio
       //}
       Instance = this;
-      //Logger.Init("ModCustomName");
+      Logger.Init("ModCustomName");
     }
 
     public override void LoadContent()
@@ -36,7 +36,9 @@ namespace TFModFortRiseCustomName
       MyPlayerIndicator.Load();
       MyVersusRoundResults.Load();
       typeof(ModExports).ModInterop();
+      //typeof(EightPlayerImport).ModInterop();
     }
+    
 
     public override void Unload()
     {

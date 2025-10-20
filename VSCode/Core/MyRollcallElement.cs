@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Monocle;
+using MonoMod.ModInterop;
 using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
@@ -19,19 +20,61 @@ namespace TFModFortRiseCustomName
     internal static void Load()
     {
       On.TowerFall.RollcallElement.ctor += ctor_patch;
+      On.TowerFall.RollcallElement.Render += Render_patch;
       On.TowerFall.RollcallElement.NotJoinedUpdate += NotJoinedUpdate_patch;
     }
 
     internal static void Unload()
     {
       On.TowerFall.RollcallElement.ctor -= ctor_patch;
+      On.TowerFall.RollcallElement.Render -= Render_patch;
       On.TowerFall.RollcallElement.NotJoinedUpdate -= NotJoinedUpdate_patch;
     }
 
     public MyRollcallElement() { }
 
+    public static void Render_patch(On.TowerFall.RollcallElement.orig_Render orig, global::TowerFall.RollcallElement self) {
+      orig(self);
+      if (TFGame.Players.Length > 4)
+      {
+        int currentPlayerIndex = DynamicData.For(self).Get<int>("playerIndex");
+        //get the Text for the player name with position -30
+        if (self.Components == null)
+        {
+          return;
+        }
+        Text positionText = null;
+        for (var i = 0; i < self.Components.Count; i++)
+        {
+          if (self.Components[i].GetType().ToString() != "Monocle.Text") continue;
+          Text text = (Text)self.Components[i];
+          if (text.Position.X != -30) continue;
+          var dynData = DynamicData.For(text);
+          String textText = dynData.Get<String>("text");
+          if (textText.Length == 0) continue;
+          if (!textText.Equals(MyRollcallElement.GetPlayerName(currentPlayerIndex))) continue;
+          dynData.Dispose();
+          positionText = text;
+          break;
+        }
+
+        if (positionText == null) return;
+
+        // we must update the Y position because the constructor is called only once if we change between 4 ou 8player mode
+        if (EightPlayerImport.LaunchedEightPlayer())
+        {   //Don't work
+          positionText.Position.Y = -40;
+        }
+        else
+        {
+          positionText.Position.Y = -60;
+        }
+      }
+    }
+
     public static void ctor_patch(On.TowerFall.RollcallElement.orig_ctor orig, global::TowerFall.RollcallElement self, int playerIndex)
     {
+      typeof(EightPlayerImport).ModInterop();
       orig(self, playerIndex);
       var dynData = DynamicData.For(self);
 
@@ -39,14 +82,16 @@ namespace TFModFortRiseCustomName
       Vector2 positionText;
       if (TFGame.Players.Length > 4)
       {
-        positionText = new Vector2(-10, -60);
-        positionText = new Vector2(0, 0);
+        if (EightPlayerImport.LaunchedEightPlayer()) {   //Don't work
+          positionText = new Vector2(-30, -40);
+        } else {
+          positionText = new Vector2(-30, -60);   //mst be 60 if LaunchedEightPlayer() work
+        }
       }
       else
       {
-        positionText = new Vector2(-30, -60); //TODO with widersetmod
+        positionText = new Vector2(-30, -60); 
       }
-
       //to do once for the game
       if (!playerName.ContainsKey(playerIndex)) {
         String name = playerNamesAvailable[0] + (playerIndex + 1);
@@ -83,11 +128,9 @@ namespace TFModFortRiseCustomName
       {
         if (kvp.Value != null)
         {
-          //var dynData = DynamicData.For(kvp.Value);
           string txt = kvp.Value;
           if (!string.IsNullOrEmpty(txt))
             usedNames.Add(txt);
-          //dynData.Dispose();
         }
       }
 
@@ -141,7 +184,6 @@ namespace TFModFortRiseCustomName
           index = 0;
       }
 
-      //dynData.Dispose();
       return index;
     }
 
