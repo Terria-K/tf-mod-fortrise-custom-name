@@ -1,6 +1,8 @@
 ﻿using System;
 using FortRise;
 using System.Diagnostics;
+using MonoMod.ModInterop;
+using MonoMod.Utils;
 
 namespace TFModFortRiseCustomName
 {
@@ -15,12 +17,12 @@ namespace TFModFortRiseCustomName
 
     public TFModFortRiseCustomNameModule() 
     {
-      if (!Debugger.IsAttached)
-      {
-        Debugger.Launch(); // Proposera d’attacher Visual Studio
-      }
+      //if (!Debugger.IsAttached)
+      //{
+        //Debugger.Launch(); // Proposera d’attacher Visual Studio
+      //}
       Instance = this;
-      Logger.Init("ModCustomNameModul");
+      //Logger.Init("ModCustomName");
     }
 
     public override void LoadContent()
@@ -33,6 +35,7 @@ namespace TFModFortRiseCustomName
       MyRollcallElement.Load();
       MyPlayerIndicator.Load();
       MyVersusRoundResults.Load();
+      typeof(ModExports).ModInterop();
     }
 
     public override void Unload()
@@ -42,5 +45,19 @@ namespace TFModFortRiseCustomName
       MyPlayerIndicator.Unload();
       MyVersusRoundResults.Unload();
     }
+  }
+}
+
+[ModExportName("com.fortrise.TFModFortRiseCustomName")]
+public static class ModExports
+{
+  public static void SetPlayerName(int playerIndex, String playerName)
+  {
+    TFModFortRiseCustomName.MyRollcallElement.SetPlayerName(playerIndex, playerName);
+  }
+
+  public static String GetPlayerName(int playerIndex)
+  {
+    return TFModFortRiseCustomName.MyRollcallElement.GetPlayerName(playerIndex);
   }
 }

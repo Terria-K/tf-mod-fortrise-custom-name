@@ -11,6 +11,8 @@ using Newtonsoft.Json;
 using Microsoft.Xna.Framework;
 using System.Text.RegularExpressions;
 //using System.Drawing;
+using System.Text;
+using System.Globalization;
 
 namespace TFModFortRiseCustomName
 {
@@ -54,8 +56,9 @@ namespace TFModFortRiseCustomName
           {
             if (names[i] != null)
             {
+              names[i] = RemoveDiacritics(names[i]);
               // Retire tout caractère qui n'est pas lettre, chiffre ou espace
-              names[i] = Regex.Replace(names[i], @"[^A-Za-z0-9 ]", "");
+              names[i] = Regex.Replace(names[i], @"[^A-Za-z0-9 '-_?!:\(\)\\/]", "");
 
               // Optionnel : trim pour enlever espaces en début/fin
               names[i] = names[i].Trim();
@@ -81,5 +84,26 @@ namespace TFModFortRiseCustomName
         }
       });
     }
+
+    public static string RemoveDiacritics(string text)
+    {
+      if (string.IsNullOrEmpty(text))
+        return text;
+
+      var normalizedString = text.Normalize(NormalizationForm.FormD);
+      var stringBuilder = new StringBuilder();
+
+      foreach (var c in normalizedString)
+      {
+        var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+        if (unicodeCategory != System.Globalization.UnicodeCategory.NonSpacingMark)
+        {
+          stringBuilder.Append(c);
+        }
+      }
+
+      return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
+    }
+
   }
 }

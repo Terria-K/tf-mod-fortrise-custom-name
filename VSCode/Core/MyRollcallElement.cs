@@ -4,6 +4,7 @@ using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.Security.Policy;
+using System.Xml.Linq;
 using TowerFall;
 
 
@@ -11,7 +12,8 @@ namespace TFModFortRiseCustomName
 {
   public class MyRollcallElement
   {
-    public static Dictionary<int, Text> playerName = new Dictionary<int, Text>(8);
+    public static Dictionary<int, String> playerName = new Dictionary<int, String>(8);
+    public static Dictionary<int, Text> playerNameText = new Dictionary<int, Text>(8);
     public static List<string> playerNamesAvailable = new List<string>();
 
     internal static void Load()
@@ -42,25 +44,32 @@ namespace TFModFortRiseCustomName
       }
       else
       {
-        positionText = new Vector2(-30, -60);
+        positionText = new Vector2(-30, -60); //TODO with widersetmod
       }
 
       //to do once for the game
       if (!playerName.ContainsKey(playerIndex)) {
         String name = playerNamesAvailable[0] + (playerIndex + 1);
-        playerName[playerIndex] = new Text(TFGame.Font, name, positionText, color, Text.HorizontalAlign.Left, Text.VerticalAlign.Bottom);
+        playerName[playerIndex] = name;
+        playerNameText[playerIndex] = new Text(TFGame.Font, name, positionText, color, Text.HorizontalAlign.Left, Text.VerticalAlign.Bottom);
       }
 
-      self.Add((Component)playerName[playerIndex]);
+      self.Add((Component)playerNameText[playerIndex]);
 
       dynData.Dispose();
     }
 
     public static void SetPlayerName(int playerIndex, String newName)
     {
-      var dynData = DynamicData.For(playerName[playerIndex]);
+      playerName[playerIndex] = newName;
+      var dynData = DynamicData.For(playerNameText[playerIndex]);
       dynData.Set("text", newName);
       dynData.Dispose();
+    }
+
+    public static String GetPlayerName(int playerIndex)
+    {
+      return playerName[playerIndex];
     }
 
     public static string getNextName(int playerIndex)
@@ -74,11 +83,11 @@ namespace TFModFortRiseCustomName
       {
         if (kvp.Value != null)
         {
-          var dynData = DynamicData.For(kvp.Value);
-          string txt = (string)dynData.Get("text");
+          //var dynData = DynamicData.For(kvp.Value);
+          string txt = kvp.Value;
           if (!string.IsNullOrEmpty(txt))
             usedNames.Add(txt);
-          dynData.Dispose();
+          //dynData.Dispose();
         }
       }
 
@@ -111,8 +120,8 @@ namespace TFModFortRiseCustomName
 
     static public int getCurrentNameIndex(int playerIndex)
     {
-      var dynData = DynamicData.For(playerName[playerIndex]);
-      String currentName = (String)dynData.Get("text");
+      //var dynData = DynamicData.For(playerName[playerIndex]);
+      String currentName = playerName[playerIndex];
       int index = 0;
 
       // Si le nom commence par 'P' et a une longueur de 2 → on renvoie 0
@@ -132,7 +141,7 @@ namespace TFModFortRiseCustomName
           index = 0;
       }
 
-      dynData.Dispose();
+      //dynData.Dispose();
       return index;
     }
 
