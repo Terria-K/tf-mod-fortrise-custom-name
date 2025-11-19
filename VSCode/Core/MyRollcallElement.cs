@@ -82,10 +82,10 @@ namespace TFModFortRiseCustomName
       Vector2 positionText;
       if (TFGame.Players.Length > 4)
       {
-        if (EightPlayerImport.LaunchedEightPlayer()) {   //Don't work
+        if (EightPlayerImport.LaunchedEightPlayer()) { 
           positionText = new Vector2(-30, -40);
         } else {
-          positionText = new Vector2(-30, -60);   //mst be 60 if LaunchedEightPlayer() work
+          positionText = new Vector2(-30, -60);  
         }
       }
       else
