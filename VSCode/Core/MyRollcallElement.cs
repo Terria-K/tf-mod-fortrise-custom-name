@@ -22,6 +22,8 @@ namespace TFModFortRiseCustomName
       On.TowerFall.RollcallElement.ctor += ctor_patch;
       On.TowerFall.RollcallElement.Render += Render_patch;
       On.TowerFall.RollcallElement.NotJoinedUpdate += NotJoinedUpdate_patch;
+      On.TowerFall.RollcallElement.ForceStart += ForceStart_patch;
+      On.TowerFall.RollcallElement.StartVersus += StartVersus_patch;
     }
 
     internal static void Unload()
@@ -29,9 +31,26 @@ namespace TFModFortRiseCustomName
       On.TowerFall.RollcallElement.ctor -= ctor_patch;
       On.TowerFall.RollcallElement.Render -= Render_patch;
       On.TowerFall.RollcallElement.NotJoinedUpdate -= NotJoinedUpdate_patch;
+      On.TowerFall.RollcallElement.ForceStart -= ForceStart_patch;
+      On.TowerFall.RollcallElement.StartVersus -= StartVersus_patch;
     }
 
     public MyRollcallElement() { }
+
+    static private void savePlayerNamesAvailable() {
+      PlayerNameStorage.Save(playerNamesAvailable);
+    }
+
+    public static void ForceStart_patch(On.TowerFall.RollcallElement.orig_ForceStart orig, global::TowerFall.RollcallElement self){
+      savePlayerNamesAvailable();
+      orig(self);
+    }
+
+    public static void StartVersus_patch(On.TowerFall.RollcallElement.orig_StartVersus orig, global::TowerFall.RollcallElement self){
+      savePlayerNamesAvailable();
+      orig(self);
+    }
+
 
     public static void Render_patch(On.TowerFall.RollcallElement.orig_Render orig, global::TowerFall.RollcallElement self) {
       orig(self);
@@ -189,6 +208,10 @@ namespace TFModFortRiseCustomName
 
     public static int NotJoinedUpdate_patch(On.TowerFall.RollcallElement.orig_NotJoinedUpdate orig, global::TowerFall.RollcallElement self)
     {
+      if (VirtualKeyboard.KeyboardActive)
+      {
+        return 0; // ignore l’input, le Rollcall ne réagit pas
+      }
       var dynData = DynamicData.For(self);
 
       int playerIndex = (int)dynData.Get("playerIndex");
@@ -199,6 +222,11 @@ namespace TFModFortRiseCustomName
       var input = DynamicData.For(dynData.Get("input"));
       if (input == null)
         return orig(self);
+      InputState inputState = input.Invoke<InputState>("GetState");
+      if (inputState.ArrowsPressed)
+      {
+        self.Scene.Add(new VirtualKeyboard(playerIndex));
+      }
       //move to next name
       if ((bool)input.Get("MenuAlt2")){
         SetPlayerName(playerIndex, getNextName(playerIndex));

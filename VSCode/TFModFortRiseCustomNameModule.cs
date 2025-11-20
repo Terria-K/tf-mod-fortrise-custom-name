@@ -17,10 +17,10 @@ namespace TFModFortRiseCustomName
 
     public TFModFortRiseCustomNameModule() 
     {
-      //if (!Debugger.IsAttached)
-      //{
+      if (!Debugger.IsAttached)
+      {
         //Debugger.Launch(); // Proposera d’attacher Visual Studio
-      //}
+      }
       Instance = this;
       Logger.Init("ModCustomName");
     }

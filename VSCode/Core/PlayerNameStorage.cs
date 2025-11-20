@@ -1,0 +1,62 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using Newtonsoft.Json;
+
+namespace TFModFortRiseCustomName
+{
+  public static class PlayerNameStorage
+  {
+    public static string filePath = @".\Mods\tf-mod-fortrise-custom-name\playerName.json";
+
+    // ----------------------------------------------------
+    // SAVE NAMES TO FILE
+    // ----------------------------------------------------
+    public static void Save(List<string> list)
+    {
+      try
+      {
+        //DON'T save the first name "P"
+        string json = JsonConvert.SerializeObject(list.GetRange(1, list.Count - 1), Formatting.Indented);
+
+        // Ensure directory exists
+        string folder = Path.GetDirectoryName(filePath);
+        if (!Directory.Exists(folder))
+          Directory.CreateDirectory(folder);
+
+        File.WriteAllText(filePath, json);
+      }
+      catch (Exception e)
+      {
+        Logger.Error("Error saving player names: " + e);
+      }
+    }
+
+    // ----------------------------------------------------
+    // LOAD NAMES FROM FILE
+    // ----------------------------------------------------
+    public static List<string> Load()
+    {
+      try
+      {
+        // If file does not exist → create empty list file
+        if (!File.Exists(filePath))
+        {
+          Save(new List<string>());
+          return new List<string>();
+        }
+
+        string json = File.ReadAllText(filePath);
+
+        var list = JsonConvert.DeserializeObject<List<string>>(json);
+
+        return list ?? new List<string>();
+      }
+      catch (Exception e)
+      {
+        Logger.Error("Error loading player names: " + e);
+        return new List<string>();  // fallback
+      }
+    }
+  }
+}

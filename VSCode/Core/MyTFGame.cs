@@ -38,18 +38,20 @@ namespace TFModFortRiseCustomName
       {
         try
         {
-          string filePath = @".\Mods\tf-mod-fortrise-custom-name\playerName.json";
+          List<string> names = PlayerNameStorage.Load();
 
-          if (!File.Exists(filePath))
-          {
-            MyRollcallElement.playerNamesAvailable = new List<string>();
-            return;
-          }
+          //string filePath = @".\Mods\tf-mod-fortrise-custom-name\playerName.json";
 
-          string jsonContent = File.ReadAllText(filePath);
+          //if (!File.Exists(filePath))
+          //{
+          //  MyRollcallElement.playerNamesAvailable = new List<string>();
+          //  return;
+          //}
 
-          // Désérialisation avec Newtonsoft.Json
-          var names = JsonConvert.DeserializeObject<List<string>>(jsonContent);
+          //string jsonContent = File.ReadAllText(filePath);
+
+          //// Désérialisation avec Newtonsoft.Json
+          //var names = JsonConvert.DeserializeObject<List<string>>(jsonContent);
 
           // Nettoyage : lettres, chiffres, espaces
           for (int i = 0; i < names.Count; i++)
@@ -58,7 +60,7 @@ namespace TFModFortRiseCustomName
             {
               names[i] = RemoveDiacritics(names[i]);
               // Retire tout caractère qui n'est pas lettre, chiffre ou espace
-              names[i] = Regex.Replace(names[i], @"[^A-Za-z0-9 '-_?!:\(\)\\/]", "");
+              names[i] = Regex.Replace(names[i], @"[^A-Za-z0-9 '-_?!:\.\(\)\\/]", "");
 
               // Optionnel : trim pour enlever espaces en début/fin
               names[i] = names[i].Trim();
