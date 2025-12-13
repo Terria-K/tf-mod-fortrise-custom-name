@@ -1,39 +1,34 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Threading;
-using Monocle;
-using MonoMod.Utils;
-using FortRise;
-using TowerFall;
-using Newtonsoft.Json;
-using Microsoft.Xna.Framework;
-using System.Text.RegularExpressions;
+using System.Globalization;
+using System.IO;
 //using System.Drawing;
 using System.Text;
-using System.Globalization;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using FortRise;
+using HarmonyLib;
+using Microsoft.Xna.Framework;
+using Monocle;
+using MonoMod.Utils;
+using Newtonsoft.Json;
+using TowerFall;
 
 namespace TFModFortRiseCustomName
 {
-  internal class MyTFGame
+  internal class MyTFGame : IHookable
   {
-    internal static void Load()
+    public static void Load(IHarmony harmony)
     {
-      On.TowerFall.TFGame.Load += Load_patch;
+      harmony.Patch(
+          AccessTools.DeclaredMethod(typeof(TFGame), nameof(TFGame.Load)),
+          postfix: new HarmonyMethod(Load_patch)
+      );
     }
 
-    internal static void Unload()
+    private static void Load_patch(MyTFGame __instance)
     {
-      On.TowerFall.TFGame.Load -= Load_patch;
-    }
-
-    private static void Load_patch(On.TowerFall.TFGame.orig_Load orig)
-    {
-      orig();
-
-
-
       TaskHelper.Run("LOAD CONFIG FILE WITH PLAYER NAME", () =>
       {
         try

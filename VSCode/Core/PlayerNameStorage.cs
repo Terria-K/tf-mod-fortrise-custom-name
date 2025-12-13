@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace TFModFortRiseCustomName
 {
   public static class PlayerNameStorage
   {
-    public static string filePath = @".\Mods\tf-mod-fortrise-custom-name\playerName.json";
+    public static string filePath = @".\FortRise\Mods\tf-mod-fortrise-custom-name\playerName.json";
 
     // ----------------------------------------------------
     // SAVE NAMES TO FILE
@@ -28,7 +29,8 @@ namespace TFModFortRiseCustomName
       }
       catch (Exception e)
       {
-        Logger.Error("Error saving player names: " + e);
+        //logger.LogError("Error saving player names: \" + {e}", e);
+        //Logger.Error("Error saving player names: " + e);
       }
     }
 
@@ -54,7 +56,7 @@ namespace TFModFortRiseCustomName
       }
       catch (Exception e)
       {
-        Logger.Error("Error loading player names: " + e);
+        //Logger.Error("Error loading player names: " + e);
         return new List<string>();  // fallback
       }
     }

@@ -1,65 +1,61 @@
-﻿using System;
+﻿using MonoMod.ModInterop;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
+using System.Xml;
 using FortRise;
-using System.Diagnostics;
-using MonoMod.ModInterop;
-using MonoMod.Utils;
+using HarmonyLib;
+using Microsoft.Extensions.Logging;
+using Microsoft.Xna.Framework;
+using Monocle;
+using TowerFall;
 
 namespace TFModFortRiseCustomName
 {
-  [Fort("com.ebe1.kenobi.tfmodfortriscustomname", "TFModFortRiseCustomNameModule")]
-  public class TFModFortRiseCustomNameModule : FortModule
+  public class TFModFortRiseCustomNameModule : Mod
   {
     public static TFModFortRiseCustomNameModule Instance;
+    //public static TFModFortRiseCustomNameSettings Settings => Instance.GetSettings<TFModFortRiseCustomNameSettings>()!;
 
-    public override Type SettingsType => typeof(TFModFortRiseCustomNameSettings);
-    public static TFModFortRiseCustomNameSettings Settings => (TFModFortRiseCustomNameSettings)Instance.InternalSettings;
+    internal Type[] Hookables = [
+        typeof(MyPlayerIndicator),
+        typeof(MyRollcallElement),
+        typeof(MyTFGame),
+        typeof(MyVersusRoundResults),
+    ];
 
-
-    public TFModFortRiseCustomNameModule() 
+    public TFModFortRiseCustomNameModule(IModContent content, IModuleContext context, ILogger logger) : base(content, context, logger)
     {
-      if (!Debugger.IsAttached)
-      {
-        //Debugger.Launch(); // Proposera d’attacher Visual Studio
-      }
       Instance = this;
-      Logger.Init("ModCustomName");
-    }
+      //Logger.Init("ModCustomName");
 
-    public override void LoadContent()
-    {
-    }
+      foreach (var hookable in Hookables)
+      {
+        hookable.GetMethod(nameof(IHookable.Load))!.Invoke(null, [context.Harmony]);
+      }
 
-    public override void Load()
-    {
-      MyTFGame.Load();
-      MyRollcallElement.Load();
-      MyPlayerIndicator.Load();
-      MyVersusRoundResults.Load();
       typeof(ModExports).ModInterop();
-      //typeof(EightPlayerImport).ModInterop();
     }
-    
 
-    public override void Unload()
+    //public override ModuleSettings CreateSettings()
+    //{
+    //  return new TFModFortRiseCustomNameSettings();
+    //}
+  }
+
+  [ModExportName("com.fortrise.TFModFortRiseCustomName")]
+  public static class ModExports
+  {
+    public static void SetPlayerName(int playerIndex, String playerName)
     {
-      MyTFGame.Unload();
-      MyRollcallElement.Unload();
-      MyPlayerIndicator.Unload();
-      MyVersusRoundResults.Unload();
+      TFModFortRiseCustomName.MyRollcallElement.SetPlayerName(playerIndex, playerName);
     }
-  }
-}
 
-[ModExportName("com.fortrise.TFModFortRiseCustomName")]
-public static class ModExports
-{
-  public static void SetPlayerName(int playerIndex, String playerName)
-  {
-    TFModFortRiseCustomName.MyRollcallElement.SetPlayerName(playerIndex, playerName);
-  }
-
-  public static String GetPlayerName(int playerIndex)
-  {
-    return TFModFortRiseCustomName.MyRollcallElement.GetPlayerName(playerIndex);
-  }
+    public static String GetPlayerName(int playerIndex)
+    {
+      return TFModFortRiseCustomName.MyRollcallElement.GetPlayerName(playerIndex);
+    }
+  } 
 }

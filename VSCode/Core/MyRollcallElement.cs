@@ -1,72 +1,78 @@
-﻿using Microsoft.Xna.Framework;
-using Monocle;
-using MonoMod.ModInterop;
-using MonoMod.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Security.Policy;
 using System.Xml.Linq;
+using FortRise;
+using HarmonyLib;
+using Microsoft.Xna.Framework;
+using Monocle;
+using MonoMod.ModInterop;
+using MonoMod.Utils;
 using TowerFall;
 
 
 namespace TFModFortRiseCustomName
 {
-  public class MyRollcallElement
+  public class MyRollcallElement : IHookable
   {
     public static Dictionary<int, String> playerName = new Dictionary<int, String>(8);
     public static Dictionary<int, Text> playerNameText = new Dictionary<int, Text>(8);
     public static List<string> playerNamesAvailable = new List<string>();
 
-    internal static void Load()
+    public static void Load(IHarmony harmony)
     {
-      On.TowerFall.RollcallElement.ctor += ctor_patch;
-      On.TowerFall.RollcallElement.Render += Render_patch;
-      On.TowerFall.RollcallElement.NotJoinedUpdate += NotJoinedUpdate_patch;
-      On.TowerFall.RollcallElement.ForceStart += ForceStart_patch;
-      On.TowerFall.RollcallElement.StartVersus += StartVersus_patch;
-    }
+      harmony.Patch(
+          AccessTools.DeclaredConstructor(typeof(RollcallElement), [
+                                                                        typeof(int),
+                                                                    ]),
+          postfix: new HarmonyMethod(ctor_patch)
+      );
 
-    internal static void Unload()
-    {
-      On.TowerFall.RollcallElement.ctor -= ctor_patch;
-      On.TowerFall.RollcallElement.Render -= Render_patch;
-      On.TowerFall.RollcallElement.NotJoinedUpdate -= NotJoinedUpdate_patch;
-      On.TowerFall.RollcallElement.ForceStart -= ForceStart_patch;
-      On.TowerFall.RollcallElement.StartVersus -= StartVersus_patch;
+      harmony.Patch(
+          AccessTools.DeclaredMethod(typeof(RollcallElement), nameof(RollcallElement.Render)),
+          postfix: new HarmonyMethod(Render_patch)
+      );
+      harmony.Patch(
+          AccessTools.DeclaredMethod(typeof(RollcallElement), "NotJoinedUpdate"),
+          postfix: new HarmonyMethod(NotJoinedUpdate_patch)
+      );
+      harmony.Patch(
+          AccessTools.DeclaredMethod(typeof(RollcallElement), "ForceStart"),
+          postfix: new HarmonyMethod(ForceStart_patch)
+      );
+      harmony.Patch(
+          AccessTools.DeclaredMethod(typeof(RollcallElement), "StartVersus"),
+          postfix: new HarmonyMethod(StartVersus_patch)
+      );
     }
-
-    public MyRollcallElement() { }
 
     static private void savePlayerNamesAvailable() {
       PlayerNameStorage.Save(playerNamesAvailable);
     }
 
-    public static void ForceStart_patch(On.TowerFall.RollcallElement.orig_ForceStart orig, global::TowerFall.RollcallElement self){
+    public static void ForceStart_patch(RollcallElement __instance){
       savePlayerNamesAvailable();
-      orig(self);
     }
 
-    public static void StartVersus_patch(On.TowerFall.RollcallElement.orig_StartVersus orig, global::TowerFall.RollcallElement self){
+    public static void StartVersus_patch(RollcallElement __instance){
       savePlayerNamesAvailable();
-      orig(self);
     }
 
 
-    public static void Render_patch(On.TowerFall.RollcallElement.orig_Render orig, global::TowerFall.RollcallElement self) {
-      orig(self);
+    public static void Render_patch(RollcallElement __instance ){
       if (TFGame.Players.Length > 4)
       {
-        int currentPlayerIndex = DynamicData.For(self).Get<int>("playerIndex");
+        int currentPlayerIndex = DynamicData.For(__instance).Get<int>("playerIndex");
         //get the Text for the player name with position -30
-        if (self.Components == null)
+        if (__instance.Components == null)
         {
           return;
         }
         Text positionText = null;
-        for (var i = 0; i < self.Components.Count; i++)
+        for (var i = 0; i < __instance.Components.Count; i++)
         {
-          if (self.Components[i].GetType().ToString() != "Monocle.Text") continue;
-          Text text = (Text)self.Components[i];
+          if (__instance.Components[i].GetType().ToString() != "Monocle.Text") continue;
+          Text text = (Text)__instance.Components[i];
           if (text.Position.X != -30) continue;
           var dynData = DynamicData.For(text);
           String textText = dynData.Get<String>("text");
@@ -91,11 +97,10 @@ namespace TFModFortRiseCustomName
       }
     }
 
-    public static void ctor_patch(On.TowerFall.RollcallElement.orig_ctor orig, global::TowerFall.RollcallElement self, int playerIndex)
+    public static void ctor_patch(RollcallElement __instance, int playerIndex)
     {
       typeof(EightPlayerImport).ModInterop();
-      orig(self, playerIndex);
-      var dynData = DynamicData.For(self);
+      var dynData = DynamicData.For(__instance);
 
       Color color = Color.White;
       Vector2 positionText;
@@ -118,7 +123,7 @@ namespace TFModFortRiseCustomName
         playerNameText[playerIndex] = new Text(TFGame.Font, name, positionText, color, Text.HorizontalAlign.Left, Text.VerticalAlign.Bottom);
       }
 
-      self.Add((Component)playerNameText[playerIndex]);
+      __instance.Add((Component)playerNameText[playerIndex]);
 
       dynData.Dispose();
     }
@@ -206,34 +211,32 @@ namespace TFModFortRiseCustomName
       return index;
     }
 
-    public static int NotJoinedUpdate_patch(On.TowerFall.RollcallElement.orig_NotJoinedUpdate orig, global::TowerFall.RollcallElement self)
+    public static void NotJoinedUpdate_patch(RollcallElement __instance)
     {
       if (VirtualKeyboard.KeyboardActive)
       {
-        return 0; // ignore l’input, le Rollcall ne réagit pas
+        return; // ignore l’input, le Rollcall ne réagit pas
       }
-      var dynData = DynamicData.For(self);
+      var dynData = DynamicData.For(__instance);
 
       int playerIndex = (int)dynData.Get("playerIndex");
 
       if (dynData.Get("input") == null)
-        return orig(self);
+        return;
 
       var input = DynamicData.For(dynData.Get("input"));
       if (input == null)
-        return orig(self);
+        return;
       InputState inputState = input.Invoke<InputState>("GetState");
       if (inputState.ArrowsPressed)
       {
-        self.Scene.Add(new VirtualKeyboard(playerIndex));
+        __instance.Scene.Add(new VirtualKeyboard(playerIndex));
       }
       //move to next name
       if ((bool)input.Get("MenuAlt2")){
         SetPlayerName(playerIndex, getNextName(playerIndex));
       }
       dynData.Dispose();
-
-      return orig(self);
     }
   }
 }
