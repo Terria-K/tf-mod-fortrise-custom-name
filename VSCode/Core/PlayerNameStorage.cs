@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+//using Newtonsoft.Json;
+using System.Text.Json;
+
 
 namespace TFModFortRiseCustomName
 {
@@ -18,8 +20,11 @@ namespace TFModFortRiseCustomName
       try
       {
         //DON'T save the first name "P"
-        string json = JsonConvert.SerializeObject(list.GetRange(1, list.Count - 1), Formatting.Indented);
-
+        //string json = JsonConvert.SerializeObject(list.GetRange(1, list.Count - 1), Formatting.Indented);
+        string json = JsonSerializer.Serialize(list.GetRange(1, list.Count - 1), new JsonSerializerOptions
+        {
+          WriteIndented = true
+        });
         // Ensure directory exists
         string folder = Path.GetDirectoryName(filePath);
         if (!Directory.Exists(folder))
@@ -50,7 +55,8 @@ namespace TFModFortRiseCustomName
 
         string json = File.ReadAllText(filePath);
 
-        var list = JsonConvert.DeserializeObject<List<string>>(json);
+        //var list = JsonConvert.DeserializeObject<List<string>>(json);
+        var list = JsonSerializer.Deserialize<List<string>>(json);
 
         return list ?? new List<string>();
       }

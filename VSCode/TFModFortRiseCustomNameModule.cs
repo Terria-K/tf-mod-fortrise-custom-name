@@ -26,6 +26,11 @@ namespace TFModFortRiseCustomName
         typeof(MyVersusRoundResults),
     ];
 
+    public override object? GetApi()
+    {
+      return new ApiImplementation();
+    }
+
     public TFModFortRiseCustomNameModule(IModContent content, IModuleContext context, ILogger logger) : base(content, context, logger)
     {
       Instance = this;
@@ -36,7 +41,7 @@ namespace TFModFortRiseCustomName
         hookable.GetMethod(nameof(IHookable.Load))!.Invoke(null, [context.Harmony]);
       }
 
-      typeof(ModExports).ModInterop();
+      //typeof(ModExports).ModInterop();
     }
 
     //public override ModuleSettings CreateSettings()
@@ -45,17 +50,17 @@ namespace TFModFortRiseCustomName
     //}
   }
 
-  [ModExportName("com.fortrise.TFModFortRiseCustomName")]
-  public static class ModExports
-  {
-    public static void SetPlayerName(int playerIndex, String playerName)
-    {
-      TFModFortRiseCustomName.MyRollcallElement.SetPlayerName(playerIndex, playerName);
-    }
+  //[ModExportName("com.fortrise.TFModFortRiseCustomName")]
+  //public static class ModExports
+  //{
+  //  public static void SetPlayerName(int playerIndex, String playerName)
+  //  {
+  //    TFModFortRiseCustomName.MyRollcallElement.SetPlayerName(playerIndex, playerName);
+  //  }
 
-    public static String GetPlayerName(int playerIndex)
-    {
-      return TFModFortRiseCustomName.MyRollcallElement.GetPlayerName(playerIndex);
-    }
-  } 
+  //  public static String GetPlayerName(int playerIndex)
+  //  {
+  //    return TFModFortRiseCustomName.MyRollcallElement.GetPlayerName(playerIndex);
+  //  }
+  //} 
 }

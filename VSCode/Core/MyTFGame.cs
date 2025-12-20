@@ -12,7 +12,7 @@ using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
-using Newtonsoft.Json;
+//using Newtonsoft.Json;
 using TowerFall;
 
 namespace TFModFortRiseCustomName
