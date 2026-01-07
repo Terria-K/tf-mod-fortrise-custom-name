@@ -4,6 +4,7 @@ using System.Security.Policy;
 using System.Xml.Linq;
 using FortRise;
 using HarmonyLib;
+using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.ModInterop;
@@ -34,7 +35,7 @@ namespace TFModFortRiseCustomName
       );
       harmony.Patch(
           AccessTools.DeclaredMethod(typeof(RollcallElement), "NotJoinedUpdate"),
-          postfix: new HarmonyMethod(NotJoinedUpdate_patch)
+          prefix: new HarmonyMethod(NotJoinedUpdate_patch)
       );
       harmony.Patch(
           AccessTools.DeclaredMethod(typeof(RollcallElement), "ForceStart"),
@@ -146,6 +147,13 @@ namespace TFModFortRiseCustomName
       int currentNameIndex = getCurrentNameIndex(playerIndex);
       string nextName = "";
 
+      // if player name is not P1..8 or one in the playerName.json file, do not modify
+      //if (getCurrentNameIndex(playerIndex) == 0 || !playerNamesAvailable.Contains(getCurrentName(playerIndex))) {
+      if (getCurrentNameIndex(playerIndex) == -1) {
+        return GetPlayerName(playerIndex);
+        //return $"A{playerIndex}"; // getCurrentName(playerIndex);
+      }
+
       // Construire la liste des noms déjà utilisés
       var usedNames = new HashSet<string>();
       foreach (var kvp in playerName)
@@ -185,11 +193,17 @@ namespace TFModFortRiseCustomName
       return nextName;
     }
 
+    //static public string getCurrentName(int playerIndex)
+    //{
+    //  //var dynData = DynamicData.For(playerName[playerIndex]);
+    //  return playerName[playerIndex];
+    //}
+
     static public int getCurrentNameIndex(int playerIndex)
     {
       //var dynData = DynamicData.For(playerName[playerIndex]);
       String currentName = playerName[playerIndex];
-      int index = 0;
+      int index = -1;
 
       // Si le nom commence par 'P' et a une longueur de 2 → on renvoie 0
       if (!string.IsNullOrEmpty(currentName) &&
@@ -204,29 +218,29 @@ namespace TFModFortRiseCustomName
         index = playerNamesAvailable.IndexOf(currentName);
 
         // Si le nom n’existe pas dans la liste, on renvoie 0 par défaut
-        if (index < 0)
-          index = 0;
+        //if (index < 0)
+        //  index = 0;
       }
 
       return index;
     }
 
-    public static void NotJoinedUpdate_patch(RollcallElement __instance)
+    public static bool NotJoinedUpdate_patch(RollcallElement __instance)
     {
       if (VirtualKeyboard.KeyboardActive)
       {
-        return; // ignore l’input, le Rollcall ne réagit pas
+        return false; // ignore l’input, le Rollcall ne réagit pas
       }
       var dynData = DynamicData.For(__instance);
 
       int playerIndex = (int)dynData.Get("playerIndex");
 
       if (dynData.Get("input") == null)
-        return;
+        return true;
 
       var input = DynamicData.For(dynData.Get("input"));
       if (input == null)
-        return;
+        return true;
       InputState inputState = input.Invoke<InputState>("GetState");
       if (inputState.ArrowsPressed)
       {
@@ -237,6 +251,8 @@ namespace TFModFortRiseCustomName
         SetPlayerName(playerIndex, getNextName(playerIndex));
       }
       dynData.Dispose();
+
+      return true;
     }
   }
 }

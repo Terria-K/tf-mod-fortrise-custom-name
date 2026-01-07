@@ -34,7 +34,7 @@ namespace TFModFortRiseCustomName
     public TFModFortRiseCustomNameModule(IModContent content, IModuleContext context, ILogger logger) : base(content, context, logger)
     {
       Instance = this;
-      //Logger.Init("ModCustomName");
+      //TFModFortRiseCustomName.Logger.Init("ModCustomName");
 
       foreach (var hookable in Hookables)
       {
