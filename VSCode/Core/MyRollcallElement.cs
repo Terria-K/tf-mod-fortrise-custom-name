@@ -141,6 +141,12 @@ namespace TFModFortRiseCustomName
       int currentNameIndex = getCurrentNameIndex(playerIndex);
       string nextName = "";
 
+      // if player name is not P1..8 or one in the playerName.json file, do not modify
+      if (getCurrentNameIndex(playerIndex) == -1)
+      {
+        return GetPlayerName(playerIndex);
+      }
+
       // Construire la liste des noms déjà utilisés
       var usedNames = new HashSet<string>();
       foreach (var kvp in playerName)
@@ -184,7 +190,7 @@ namespace TFModFortRiseCustomName
     {
       //var dynData = DynamicData.For(playerName[playerIndex]);
       String currentName = playerName[playerIndex];
-      int index = 0;
+      int index = -1;
 
       // Si le nom commence par 'P' et a une longueur de 2 → on renvoie 0
       if (!string.IsNullOrEmpty(currentName) &&
@@ -199,8 +205,8 @@ namespace TFModFortRiseCustomName
         index = playerNamesAvailable.IndexOf(currentName);
 
         // Si le nom n’existe pas dans la liste, on renvoie 0 par défaut
-        if (index < 0)
-          index = 0;
+        //if (index < 0)
+        //  index = 0;
       }
 
       return index;
